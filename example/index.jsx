@@ -17,7 +17,11 @@ class App extends Component {
         <TileLayer
           url="//stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}.png"
         />
-        <PixiLayer data={data} level={{ filter: 'rssi', icon: ['0xff0000',,'0xffff00','0x00ff00'], range: []}}/>
+        <PixiLayer
+          data={data}
+          level={{ filter: 'rssi', icon: ['0xff0000',,'0xffff00','0x00ff00'], range: []}}
+          animate={{duration: 100}}
+        />
       </Map>
     );
   }

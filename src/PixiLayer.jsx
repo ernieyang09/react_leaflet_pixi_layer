@@ -6,13 +6,13 @@ import 'leaflet-pixi-overlay';
 import img from './marker-icon.png';
 
 class PixiLayer extends MapLayer {
-	params = {
+
+	initParams = () => ({
 		frame: null,
 		firstDraw: true,
 		prevZoom: null,
-		duration: 100,
 		start: null,
-	}
+	});
 
 	animate = (timestamp) => {
 		const { duration } = this.params;
@@ -28,27 +28,28 @@ class PixiLayer extends MapLayer {
 	}
 
   createLeafletElement(props) {
+		let { frame, firstDraw, prevZoom, start } = {...this.initParams()};
+		let duration = this.props.animate && this.props.animate.duration;
+
+		console.log(frame, firstDraw, prevZoom, start, duration)
 		console.log(props)
     const { map } = this.context;
 		console.log(map)
 
-    var frame = null;
-		var firstDraw = true;
-		var prevZoom;
+		const points = props.data.map((point) => {
+			const graphic = new PIXI.Graphics();
+			graphic.popup = L.popup()
+				.setLatLng(point.location)
+				.setContent('I am a circle.');
+			graphic.interactive = true;
+			return graphic;
+		});
 
-		var circleCenter = [51.508, -0.11];
-		var projectedCenter;
-		var circleRadius = 85;
-		var circle = new PIXI.Graphics();
+		let projectedCenters = [];
+		var circleRadius = 30;
 
-		circle.popup = L.popup()
-			.setLatLng(circleCenter)
-			.setContent('I am a circle.');
-			[circle].forEach(function(geo) {
-				geo.interactive = true;
-			});
     const pixiContainer = new PIXI.Container();
-		pixiContainer.addChild( circle);
+		pixiContainer.addChild(...points);
 		pixiContainer.interactive = true;
 		pixiContainer.interactiveChildren = true;
 		pixiContainer.buttonMode = true;
@@ -70,22 +71,25 @@ class PixiLayer extends MapLayer {
 			var project = utils.latLngToLayerPoint;
 			var scale = utils.getScale();
 
+
+
 			if (firstDraw) {
-				projectedCenter = project(circleCenter);
+				projectedCenters = props.data.map(point => project(point.location)) ;
 				circleRadius = circleRadius / scale;
 			}
 			if (firstDraw || prevZoom !== zoom) {
-				circle.clear();
-				circle.lineStyle(3 / scale, 0xff0000, 1);
-				circle.beginFill(0xff0033, 0.5);
-				circle.x = projectedCenter.x;
-				circle.y = projectedCenter.y;
-				circle.drawCircle(0, 0, circleRadius);
-				circle.endFill();
+				points.forEach((point, i) => {
+					point.clear();
+					point.lineStyle(3 / scale, 0xff0000, 1);
+					point.beginFill(0xff0033, 0.5);
+					point.x = projectedCenters[i].x;
+					point.y = projectedCenters[i].y;
+					point.drawCircle(0, 0, circleRadius);
+					point.endFill();
+				})
 
 			}
-			var duration = 100;
-			var start;
+
 			function animate(timestamp) {
 				var progress;
 			  if (start === null) start = timestamp;
