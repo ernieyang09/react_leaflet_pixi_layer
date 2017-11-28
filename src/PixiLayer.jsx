@@ -6,36 +6,49 @@ import 'leaflet-pixi-overlay';
 import img from './marker-icon.png';
 
 class PixiLayer extends MapLayer {
+	params = {
+		frame: null,
+		firstDraw: true,
+		prevZoom: null,
+		duration: 100,
+		start: null,
+	}
+
+	animate = (timestamp) => {
+		const { duration } = this.params;
+		if (start === null) start = timestamp;
+		const progress = timestamp - start;
+		let lambda = progress / this.params.duration;
+		if (lambda > 1) lambda = 1;
+		lambda = lambda * (0.4 + lambda * (2.2 + lambda * -1.6));
+		renderer.render(container);
+		if (progress < duration) {
+			frame = requestAnimationFrame(animate);
+		}
+	}
+
   createLeafletElement(props) {
+		console.log(props)
     const { map } = this.context;
+		console.log(map)
+
     var frame = null;
 		var firstDraw = true;
 		var prevZoom;
 
-		var polygonLatLngs = [
-				[51.509, -0.08],
-				[51.503, -0.06],
-				[51.51, -0.047],
-				[51.509, -0.08]
-			];
-		var projectedPolygon;
 		var circleCenter = [51.508, -0.11];
 		var projectedCenter;
 		var circleRadius = 85;
-		var triangle = new PIXI.Graphics();
-		triangle.popup = L.popup()
-			.setLatLng([51.5095, -0.063])
-			.setContent('I am a polygon.');
 		var circle = new PIXI.Graphics();
 
 		circle.popup = L.popup()
 			.setLatLng(circleCenter)
 			.setContent('I am a circle.');
-			[triangle, circle].forEach(function(geo) {
+			[circle].forEach(function(geo) {
 				geo.interactive = true;
 			});
     const pixiContainer = new PIXI.Container();
-		pixiContainer.addChild(triangle, circle);
+		pixiContainer.addChild( circle);
 		pixiContainer.interactive = true;
 		pixiContainer.interactiveChildren = true;
 		pixiContainer.buttonMode = true;
@@ -58,21 +71,10 @@ class PixiLayer extends MapLayer {
 			var scale = utils.getScale();
 
 			if (firstDraw) {
-				projectedPolygon = polygonLatLngs.map(function(coords) {return project(coords);});
 				projectedCenter = project(circleCenter);
 				circleRadius = circleRadius / scale;
 			}
 			if (firstDraw || prevZoom !== zoom) {
-				triangle.clear();
-				triangle.lineStyle(3 / scale, 0x3388ff, 1);
-				triangle.beginFill(0x3388ff, 0.2);
-				triangle.x = projectedPolygon[0].x;
-				triangle.y = projectedPolygon[0].y;
-				projectedPolygon.forEach(function(coords, index) {
-					if (index == 0) triangle.moveTo(0, 0);
-					else triangle.lineTo(coords.x - triangle.x, coords.y - triangle.y);
-				});
-				triangle.endFill();
 				circle.clear();
 				circle.lineStyle(3 / scale, 0xff0000, 1);
 				circle.beginFill(0xff0033, 0.5);
@@ -110,7 +112,6 @@ class PixiLayer extends MapLayer {
   }
 
   render() {
-    console.log(this)
     return null;
   }
 }
