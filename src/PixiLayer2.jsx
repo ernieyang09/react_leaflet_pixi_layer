@@ -29,12 +29,13 @@ class PixiLayer extends Component {
 			}
 	  });
     const test = new PixiCanvasLayer(pixiContainer);
+    // test.setData()
     this.context.map.addLayer(test)
 
   }
 
   render() {
-    console.log(this.context)
+    // console.log(this.context)
     return null;
   }
 }

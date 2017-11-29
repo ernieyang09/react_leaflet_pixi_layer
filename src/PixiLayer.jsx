@@ -137,6 +137,7 @@ class PixiLayer extends MapLayer {
   }
 
   render() {
+		// console.log(this)
     return null;
   }
 }
