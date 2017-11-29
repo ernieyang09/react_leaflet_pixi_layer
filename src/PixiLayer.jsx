@@ -4,6 +4,9 @@ import { MapLayer } from 'react-leaflet';
 import * as PIXI from 'pixi.js';
 import 'leaflet-pixi-overlay';
 import img from './marker-icon.png';
+import Node from './QuadTree';
+
+// console.log(new Node('test'))
 
 class PixiLayer extends MapLayer {
 
@@ -14,27 +17,14 @@ class PixiLayer extends MapLayer {
 		start: null,
 	});
 
-	animate = (timestamp) => {
-		const { duration } = this.params;
-		if (start === null) start = timestamp;
-		const progress = timestamp - start;
-		let lambda = progress / this.params.duration;
-		if (lambda > 1) lambda = 1;
-		lambda = lambda * (0.4 + lambda * (2.2 + lambda * -1.6));
-		renderer.render(container);
-		if (progress < duration) {
-			frame = requestAnimationFrame(animate);
-		}
-	}
 
   createLeafletElement(props) {
 		let { frame, firstDraw, prevZoom, start } = {...this.initParams()};
-		let duration = this.props.animate && this.props.animate.duration;
+		const animation = this.props.animation;
 
-		console.log(frame, firstDraw, prevZoom, start, duration)
-		console.log(props)
+		// console.log(props)
     const { map } = this.context;
-		console.log(map)
+		// console.log(map)
 
 		const points = props.data.map((point) => {
 			const graphic = new PIXI.Graphics();
@@ -49,7 +39,7 @@ class PixiLayer extends MapLayer {
 		var circleRadius = 30;
 
     const pixiContainer = new PIXI.Container();
-		pixiContainer.addChild(...points);
+		// pixiContainer.addChild(...points);
 		pixiContainer.interactive = true;
 		pixiContainer.interactiveChildren = true;
 		pixiContainer.buttonMode = true;
@@ -71,22 +61,51 @@ class PixiLayer extends MapLayer {
 			var project = utils.latLngToLayerPoint;
 			var scale = utils.getScale();
 
-
-
 			if (firstDraw) {
 				projectedCenters = props.data.map(point => project(point.location)) ;
-				circleRadius = circleRadius / scale;
-			}
-			if (firstDraw || prevZoom !== zoom) {
+
+				circleRadius = 0.2;
+				let test = new PIXI.Graphics();
+				test.beginFill(0xff0033, 0.8);
+				test.drawCircle(0, 0, circleRadius);
+				test.endFill();
 				points.forEach((point, i) => {
-					point.clear();
-					point.lineStyle(3 / scale, 0xff0000, 1);
-					point.beginFill(0xff0033, 0.5);
-					point.x = projectedCenters[i].x;
-					point.y = projectedCenters[i].y;
-					point.drawCircle(0, 0, circleRadius);
-					point.endFill();
+					// point.clear();
+					// point.lineStyle(3 / scale, 0xff0000, 1);
+					// point.beginFill(0xff0033, 0.8);
+					// point.x = projectedCenters[i].x;
+					// point.y = projectedCenters[i].y;
+					// point.drawCircle(0, 0, circleRadius);
+					// point.endFill();
+					// console.log(point)
+					let texture = test.generateCanvasTexture();
+					const a = new PIXI.Sprite(test.generateCanvasTexture());
+					a.x = projectedCenters[i].x;
+					a.y = projectedCenters[i].y;
+					a.interactive = true;
+					// console.log(texture)
+					pixiContainer.addChild(a)
 				})
+				// circleRadius = 1/ 32;
+			}
+
+			if (firstDraw || prevZoom !== zoom) {
+				// points.forEach((point, i) => {
+				// 	point.clear();
+				// 	// point.lineStyle(3 / scale, 0xff0000, 1);
+				// 	point.beginFill(0xff0033, 0.8);
+				// 	point.x = projectedCenters[i].x;
+				// 	point.y = projectedCenters[i].y;
+				// 	point.drawCircle(0, 0, circleRadius);
+				// 	point.endFill();
+				// 	// console.log(point)
+				// 	let texture = point.generateCanvasTexture();
+				// 	const a = new PIXI.Sprite(point.generateCanvasTexture());
+				// 	a.x = projectedCenters[i].x;
+				// 	a.y = projectedCenters[i].y;
+				// 	// console.log(texture)
+				// 	pixiContainer.addChild(a)
+				// })
 
 			}
 
@@ -94,18 +113,20 @@ class PixiLayer extends MapLayer {
 				var progress;
 			  if (start === null) start = timestamp;
 			  progress = timestamp - start;
-			  var lambda = progress / duration;
+			  var lambda = progress / animation.duration;
 			  if (lambda > 1) lambda = 1;
 			  lambda = lambda * (0.4 + lambda * (2.2 + lambda * -1.6));
 				renderer.render(container);
-			  if (progress < duration) {
+			  if (progress < animation.duration) {
 			    frame = requestAnimationFrame(animate);
 			  }
 			}
-			if (!firstDraw && prevZoom !== zoom) {
+
+			if (animation && !firstDraw && prevZoom !== zoom) {
 				start = null;
 				frame = requestAnimationFrame(animate);
 			}
+
 			firstDraw = false;
 			prevZoom = zoom;
 			renderer.render(container);
