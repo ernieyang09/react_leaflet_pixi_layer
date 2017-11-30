@@ -23,19 +23,21 @@ class PixiLayer extends Component {
 		pixiContainer.interactiveChildren = true;
 		pixiContainer.buttonMode = true;
 		pixiContainer.on('click', function(e) {
+      console.log(e)
       const target = e.target;
 			if (target && target.popup) {
 				setTimeout(function() {target.popup.openOn(map);});
 			}
 	  });
     const test = new PixiCanvasLayer(pixiContainer);
-    // test.setData()
+    test._data = this.props.data;
+    test.setData(this.props.data.map(point => point.location))
     this.context.map.addLayer(test)
 
   }
 
   render() {
-    // console.log(this.context)
+    // console.log(this.props)
     return null;
   }
 }

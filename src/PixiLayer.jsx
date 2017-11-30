@@ -44,6 +44,7 @@ class PixiLayer extends MapLayer {
 		pixiContainer.interactiveChildren = true;
 		pixiContainer.buttonMode = true;
 		pixiContainer.on('click', function(e) {
+			// console.log(e)
       const target = e.target;
 			if (target && target.popup) {
 				setTimeout(function() {target.popup.openOn(map);});
@@ -63,28 +64,28 @@ class PixiLayer extends MapLayer {
 
 			if (firstDraw) {
 				projectedCenters = props.data.map(point => project(point.location)) ;
-
+// console.log(projectedCenters)
 				circleRadius = 0.2;
-				let test = new PIXI.Graphics();
-				test.beginFill(0xff0033, 0.8);
-				test.drawCircle(0, 0, circleRadius);
-				test.endFill();
+				// let test = new PIXI.Graphics();
+				// test.beginFill(0xff0033, 0.8);
+				// test.drawCircle(0, 0, circleRadius);
+				// test.endFill();
 				points.forEach((point, i) => {
-					// point.clear();
-					// point.lineStyle(3 / scale, 0xff0000, 1);
-					// point.beginFill(0xff0033, 0.8);
-					// point.x = projectedCenters[i].x;
-					// point.y = projectedCenters[i].y;
-					// point.drawCircle(0, 0, circleRadius);
-					// point.endFill();
-					// console.log(point)
-					let texture = test.generateCanvasTexture();
-					const a = new PIXI.Sprite(test.generateCanvasTexture());
-					a.x = projectedCenters[i].x;
-					a.y = projectedCenters[i].y;
-					a.interactive = true;
+					let test = new PIXI.Graphics();
+					test.beginFill(0xff0033, 0.8);
+					test.drawCircle(0, 0, circleRadius);
+					test.endFill();
+					// let texture = test.generateCanvasTexture();
+					// const a = new PIXI.Sprite(test.generateCanvasTexture());
+					// a.x = projectedCenters[i].x;
+					// a.y = projectedCenters[i].y;
+					// a.interactive = true;
 					// console.log(texture)
-					pixiContainer.addChild(a)
+					// pixiContainer.addChild(a)
+					test.x = projectedCenters[i].x;
+					test.y = projectedCenters[i].y;
+					test.interactive = true;
+					pixiContainer.addChild(test);
 				})
 				// circleRadius = 1/ 32;
 			}

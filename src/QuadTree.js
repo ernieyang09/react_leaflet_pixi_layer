@@ -23,9 +23,100 @@ change to es6 class
 */
 
 class QuadTree {
-  constructor(bounds, pointQuad, maxDepth, maxChildren) {
 
+  root = null;
+
+  constructor(bounds, pointQuad, maxDepth, maxChildren) {
+    var node;
+    if(pointQuad)
+    {
+
+        node = new Node(bounds, 0, maxDepth, maxChildren);
+    }
+    else
+    {
+        node = new BoundsNode(bounds, 0, maxDepth, maxChildren);
+    }
+
+    this.root = node;
   }
+
+  insert = (item) => {
+    if(item instanceof Array)
+    {
+        var len = item.length;
+
+        for(var i = 0; i < len; i++)
+        {
+            this.root.insert(item[i]);
+        }
+    }
+    else
+    {
+        this.root.insert(item);
+    }
+  }
+
+  clear = () => {
+    this.root.clear();
+  }
+
+  retrieve = (item) => {
+    //get a copy of the array of items
+    var out = this.root.retrieve(item).slice(0);
+    //return QuadTree._filterResults(out, {x:item.x, y:item.y, width:0, height:0});
+    return out;
+  }
+
+  retrieveInBounds = (bounds) => {
+    var treeResult = this.root.retrieveInBounds(bounds);
+    return QuadTree._filterResults(treeResult, bounds);
+  }
+
+  static _filterResults (treeResult, bounds) {
+    var filteredResult = [];
+
+    if(this.root instanceof BoundsNode)
+    {
+        for (var i=0; i < treeResult.length; i++)
+        {
+            var node = treeResult[i];
+            if (QuadTree._isBoundOverlappingBound(node, bounds))
+            {
+                filteredResult.push(node);
+            }
+        }
+    }
+    else
+    {
+        treeResult.forEach(function(node){
+            if(QuadTree._isPointInsideBounds(node, bounds))
+            {
+                filteredResult.push(node);
+            }
+        });
+    }
+
+    return filteredResult;
+  }
+
+  static _isPointInsideBounds (point, bounds) {
+      return (
+          (point.x >= bounds.x) &&
+          (point.x <= bounds.x + bounds.width) &&
+          (point.y >= bounds.y) &&
+          (point.y <= bounds.y + bounds.height)
+      );
+  };
+
+  static _isBoundOverlappingBound (b1, b2) {
+      return !(
+              b1.x > (b2.x + b2.width)  ||
+              b2.x > (b1.x + b1.width)  ||
+              b1.y > (b2.y + b2.height) ||
+              b2.y > (b1.y + b1.height)
+         );
+  };
 }
 
 
@@ -207,4 +298,100 @@ class Node {
   }
 }
 
-export default Node;
+class BoundsNode extends Node {
+  _classConstructor = BoundsNode;
+  _stuckChildren = null;
+  _out = [];
+  constructor(bounds, depth, maxChildren, maxDepth) {
+    super(bounds, depth, maxChildren, maxDepth);
+    this._stuckChildren = [];
+  }
+
+  insert = (item) => {
+    if(this.nodes.length)
+    {
+        var index = this._findIndex(item);
+        var node = this.nodes[index];
+
+        //todo: make _bounds bounds
+        if(item.x >= node._bounds.x &&
+            item.x + item.width <= node._bounds.x + node._bounds.width &&
+            item.y >= node._bounds.y &&
+            item.y + item.height <= node._bounds.y + node._bounds.height)
+        {
+            this.nodes[index].insert(item);
+        }
+        else
+        {
+            this._stuckChildren.push(item);
+        }
+
+        return;
+    }
+
+    this.children.push(item);
+
+    var len = this.children.length;
+
+    if(this._depth < this._maxDepth &&
+        len > this._maxChildren)
+    {
+        this.subdivide();
+
+        for(var i = 0; i < len; i++)
+        {
+            this.insert(this.children[i]);
+        }
+
+        this.children.length = 0;
+    }
+  }
+
+  getChildren = () => {
+    return this.children.concat(this._stuckChildren);
+  }
+
+  retrieve = (item) => {
+    var out = this._out;
+    out.length = 0;
+    if(this.nodes.length)
+    {
+        var index = this._findIndex(item);
+
+        out.push.apply(out, this.nodes[index].retrieve(item));
+    }
+
+    out.push.apply(out, this._stuckChildren);
+    out.push.apply(out, this.children);
+
+    return out;
+  }
+
+  clear = () => {
+    this._stuckChildren.length = 0;
+
+    //array
+    this.children.length = 0;
+
+    var len = this.nodes.length;
+
+    if(!len)
+    {
+        return;
+    }
+
+    for(var i = 0; i < len; i++)
+    {
+        this.nodes[i].clear();
+    }
+
+    //array
+    this.nodes.length = 0;
+
+    //we could call the super clear function but for now, im just going to inline it
+    //call the hidden super.clear, and make sure its called with this = this instance
+    //Object.getPrototypeOf(BoundsNode.prototype).clear.call(this);
+  }
+}
+
+export default QuadTree;
